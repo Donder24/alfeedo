@@ -25,6 +25,7 @@ Copyright (C) 2025-2026 Michael Zanetti <michael_zanetti@gmx.net>
 #include "NetworkConfigManager.h"
 #include "Logging.h"
 #include "TimeSource.h"
+#include <WiFi.h>
 
 #include <map>
 #include <time.h>
@@ -134,6 +135,13 @@ void CatServerApi::handleStatus(AsyncWebServerRequest *request) {
     JsonObject nextTimerJson = doc["nextTimer"].to<JsonObject>();    
     nextTimerJson["time"] = m_engine->nextTimer().time();
     nextTimerJson["mode"] = TimerEntry::timerModeToString(m_engine->nextTimer().mode());
+
+    // --- WiFi & system diagnostics ---
+    doc["wifiRssi"]  = WiFi.RSSI();                  // signaalsterkte in dBm (bv. -65)
+    doc["wifiSsid"]  = WiFi.SSID();                  // naam van het netwerk
+    doc["ipAddress"] = WiFi.localIP().toString();    // IP-adres van de ESP32
+    doc["uptime"]    = millis() / 1000;              // uptime in seconden
+    doc["freeHeap"]  = ESP.getFreeHeap();            // vrij RAM in bytes
 
     String response;
     serializeJson(doc, response);
