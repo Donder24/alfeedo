@@ -15,41 +15,53 @@ If not, see <https://www.gnu.org/licenses/>.
 Copyright (C) 2025-2026 Michael Zanetti <michael_zanetti@gmx.net>
 */
 
-#ifndef CATSERVER_H
-#define CATSERVER_H
+#ifndef CATSERVERAPI_H
+#define CATSERVERAPI_H
 
 #include <Arduino.h>
 #include <ESPAsyncWebServer.h>
 
-#include "webserver/CatServerFrontend.h"
-#include "webserver/CatServerApi.h"
-#include "ResetHandler.h"
-
 class Engine;
 class OTAManager;
 class FillSensor;
-class TimeSource;
 class DisplayController;
 class NetworkConfigManager;
+class TimeSource;
 
-class CatServer {
+class CatServerApi: public AsyncWebHandler {
 public:
-    CatServer();
-    ~CatServer();
+    void begin(Engine* engine, FillSensor* fillSensor, OTAManager* otaManager, DisplayController* displayController, NetworkConfigManager* networkConfigManager, TimeSource* timeSource);
 
-    void begin(Engine* engine, FillSensor* fillSensor, OTAManager* otaManager, TimeSource* timeSource, DisplayController* displayController, NetworkConfigManager* networkConfigManager, ResetFunction resetFunction);
-    void loop();
-
+    bool canHandle(AsyncWebServerRequest* request) const override;
+    void handleRequest(AsyncWebServerRequest* request) override;
+    void handleBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) override;
+    bool isRequestHandlerTrivial() const override {
+        return false;
+    }
 private:
-    AsyncWebServer m_server;
+    void handleStatus(AsyncWebServerRequest *request);
+    void handleFillSensor(AsyncWebServerRequest *request);
+    void handleTimers(AsyncWebServerRequest *request);
+    void handleLogs(AsyncWebServerRequest *request);
+    void handleFeed(AsyncWebServerRequest *request);
+    void handleDebugLogs(AsyncWebServerRequest *request);
+    void handleReset(AsyncWebServerRequest *request);  // ← nieuw
+    void handleMotorSettings(AsyncWebServerRequest *request);
+    void handleFillSensorSettings(AsyncWebServerRequest *request);
+    void handleTimeSettings(AsyncWebServerRequest *request);
 
-    CatServerFrontend m_frontend;
-    CatServerApi m_api;
+    void handleFeedBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);
+    void handleTimersBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);
+    void handleMotorSettingsBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);
+    void handleFillSensorSettingsBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);
+    void handleTimeSettingsBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);
 
+    Engine* m_engine = nullptr;
+    OTAManager* m_otaManager = nullptr;
+    FillSensor* m_fillSensor = nullptr;
+    DisplayController* m_displayController = nullptr;
     NetworkConfigManager* m_networkConfigManager = nullptr;
-
-    void handleNotFound(AsyncWebServerRequest *request);
-
+    TimeSource* m_timeSource = nullptr;
 };
 
-#endif // CATSERVER_H
+#endif // CATSERVERAPI_H
