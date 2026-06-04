@@ -144,6 +144,7 @@ void CatServerApi::handleStatus(AsyncWebServerRequest *request) {
     doc["ipAddress"] = WiFi.localIP().toString();
     doc["uptime"]    = millis() / 1000;
     doc["freeHeap"]  = ESP.getFreeHeap();
+    doc["firmwareVersion"]  = CATFEEDER_VERSION;
  
     String response;
     serializeJson(doc, response);
